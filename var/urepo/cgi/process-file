@@ -1,0 +1,43 @@
+#!/bin/bash
+set -u -e
+
+exec 2>&1
+
+echo "Content-Type: text/plain"
+echo
+
+CONFIG=/etc/urepo/urepo.conf
+
+. $CONFIG || {
+    echo "Failed to load $CONFIG"
+    exit
+}
+
+boundary=${CONTENT_TYPE##*=}
+stdin=$(tr -d '\r')
+for i in $(echo $stdin|sed -e "s/--${boundary}-*/\n/g" -e 's/ Content-Disposition: form-data; name="\([^"]*\)" */\1,/g'); do
+    var=$(echo $i|cut -f1 -d,)
+    val=$(echo $i|cut -f2 -d,)
+    declare ${var//./_}="$val"
+done
+
+find $UREPO_UPLOAD_DIR -type f -amin +60 -exec rm -f {} \;
+
+[[ $file1_path =~ ^$UREPO_UPLOAD_DIR ]] || {
+    echo "Bad file path: $file1_path"
+    exit
+}
+
+while [ "$$" != "$(pgrep -o -f $0)" ] ; do
+    sleep 1
+done
+
+ext=${file1_name##*.}
+handler="$(dirname $0)/handler-${ext}"
+if [ -r "$handler" ] ; then
+    . $handler
+else
+    echo "No handler for $file1_name, removing file"
+    rm -f $file1_path
+fi
+

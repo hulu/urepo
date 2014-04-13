@@ -1,0 +1,23 @@
+<html>
+<head>
+<title>Repository upload</title>
+</head>
+<body>
+<h2>Select file to upload to repository</h2>
+<form name="upload" method="POST" enctype="multipart/form-data" action="/upload">
+<select name="dist">
+    <option value="centos5">centos5</option>
+    <option value="centos6">centos6</option>
+    <option value="lucid">lucid</option>
+    <option value="precise">precise</option>
+</select>
+<select name="branch">
+    <option value="testing">testing</option>
+    <option value="stable">stable</option>
+</select>
+<input type="file" name="file1">
+<input type="submit" name="submit" value="Upload">
+<input type="hidden" name="test" value="value">
+</form>
+</body>
+</html>
