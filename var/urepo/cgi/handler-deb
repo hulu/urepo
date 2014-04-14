@@ -23,7 +23,7 @@ pool_dir=pool/$dist/$branch
 cp $file1_path $pool_dir/$full_pkg_name
 rm -f $file1_path
 echo "Added $pool_dir/$full_pkg_name"
-for arch in $(eval "echo $DEB_ARCHITECTURES"); do
+for arch in $DEB_ARCHITECTURES; do
     data_dir=dists/$dist/$branch/binary-$arch
     [ -d "$data_dir" ] || {
         echo "Bad data directory: $data_dir"
@@ -40,7 +40,7 @@ echo "Generating Release for $dist"
 apt-ftparchive \
     -o APT::FTPArchive::Release::Suite="$dist" \
     -o APT::FTPArchive::Release::Codename="$dist" \
-    -o APT::FTPArchive::Release::Architectures="$(eval echo $DEB_ARCHITECTURES)" \
-    -o APT::FTPArchive::Release::Components="$(eval echo $DEB_COMPONENTS)" \
+    -o APT::FTPArchive::Release::Architectures="$DEB_ARCHITECTURES" \
+    -o APT::FTPArchive::Release::Components="$DEB_COMPONENTS" \
     release dists/$dist > dists/$dist/Release
 
