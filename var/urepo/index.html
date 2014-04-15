@@ -1,23 +1,39 @@
-<html>
+<!DOCTYPE html>
 <head>
-<title>Repository upload</title>
+    <meta charset='UTF-8'>
+    <title>Select file to upload to repository</title>
+    <script src="/jquery.min.js"></script>
+    <script>
+        $(function() {
+            var data = { };
+            var $dist_dd = $("#dist");
+            var change_branch_dd = function() {
+                var key = $dist_dd.val();
+                var $branch_dd = $("#branch");
+                $branch_dd.empty();
+                $.each(data[key], function(index, value) {
+                    $branch_dd.append("<option>" + value + "</option>");
+                });
+            };
+            $dist_dd.change(change_branch_dd);
+            $(document).ready(function() {
+                $.each(Object.keys(data).sort(), function(index, value) {
+                    $dist_dd.append("<option>" + value + "</option>")
+                });
+                $dist_dd.val(0);
+                change_branch_dd();
+            });
+        });
+    </script>
 </head>
 <body>
-<h2>Select file to upload to repository</h2>
-<form name="upload" method="POST" enctype="multipart/form-data" action="/upload">
-<select name="dist">
-    <option value="centos5">centos5</option>
-    <option value="centos6">centos6</option>
-    <option value="lucid">lucid</option>
-    <option value="precise">precise</option>
-</select>
-<select name="branch">
-    <option value="testing">testing</option>
-    <option value="stable">stable</option>
-</select>
-<input type="file" name="file1">
-<input type="submit" name="submit" value="Upload">
-<input type="hidden" name="test" value="value">
-</form>
+    <h1>Select file to upload to repository</h1>
+    <form name="upload" method="POST" enctype="multipart/form-data" action="/upload">
+        <select id="dist"></select>
+        <select id="branch"></select>
+        <input type="file" name="file1">
+        <input type="submit" name="submit" value="Upload">
+        <input type="hidden" name="test" value="value">
+    </form>
 </body>
 </html>
