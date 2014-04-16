@@ -2,7 +2,7 @@ server {
     client_max_body_size 256m;
     root /var/urepo;
     index index.html index.htm;
-    server_name elsautosandbox1;
+    server_name localhost;
     location / {
         try_files $uri $uri/ $uri/index.html;
         autoindex on;
