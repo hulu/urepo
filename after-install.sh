@@ -21,7 +21,7 @@ configure_urepo() {
         data+="${data:+, }$release: [$options]"
     done
     # let's create deb directory hierarchy
-    mkdir $DEB_REPO_ROOT && cd $DEB_REPO_ROOT
+    mkdir -p $DEB_REPO_ROOT && cd $DEB_REPO_ROOT
     for codename in $DEB_CODENAMES; do
         options=""
         for component in $DEB_COMPONENTS; do
