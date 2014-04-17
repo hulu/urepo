@@ -9,7 +9,7 @@ configure_urepo() {
     # json would contain entries like: release_name: [branch_name1, branch_name2, ...]
     data=""
     # let's create rpm directory hierarchy
-    mkdir -p $RPM_REPO_ROOT && cd $RPM_REPO_ROOT
+    mkdir -p $RPM_REPO_ROOT && cd $RPM_REPO_ROOT && chmod -R +r .
     for release in $RPM_RELEASES; do
         options=""
         for component in $RPM_COMPONENTS; do
@@ -21,7 +21,7 @@ configure_urepo() {
         data+="${data:+, }$release: [$options]"
     done
     # let's create deb directory hierarchy
-    mkdir -p $DEB_REPO_ROOT && cd $DEB_REPO_ROOT
+    mkdir -p $DEB_REPO_ROOT && cd $DEB_REPO_ROOT && chmod -R +r .
     for codename in $DEB_CODENAMES; do
         options=""
         for component in $DEB_COMPONENTS; do

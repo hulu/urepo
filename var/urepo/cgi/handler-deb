@@ -22,6 +22,7 @@ pool_dir=pool/$dist/$branch
 }
 cp $file1_path $pool_dir/$full_pkg_name
 rm -f $file1_path
+chmod 0644 $pool_dir/$full_pkg_name
 echo "Added $pool_dir/$full_pkg_name"
 for arch in $DEB_ARCHITECTURES; do
     data_dir=dists/$dist/$branch/binary-$arch
