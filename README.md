@@ -1,4 +1,4 @@
-This is radme for urepo (universal repository for linux binary packages).
+This is readme for urepo (universal repository for linux binary packages).
 
 Urepo can host both rpm and deb packages. Nginx is used as web frontend.
 Generation of metadata is done by apt-ftparchive for .deb packages and by
