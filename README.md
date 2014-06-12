@@ -18,12 +18,7 @@ Another way to upload package is to use urepo-upload.sh utility. It uses
 ssh for uploading, after upload is done it triggers file processing via the
 same http://urepo.server/cgi/process-file hook.
 
-Pros of current system:
-    - extra dependencies (xinetd and ruby) eliminated;
-    - code is much cleaner now;
-    - processing of uploaded file occurs immediately;
-
-Cons of current system:
+Drawbacks of current system:
     - no easy way to delete obsolete packages;
     - in order to promote package from testing to stable you need to reupload
       it, should use hard link instead;
