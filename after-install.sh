@@ -15,7 +15,11 @@ configure_urepo() {
         for component in $RPM_COMPONENTS; do
             options+="${options:+, }\"$component\""
             for arch in $RPM_ARCHITECTURES; do
-                mkdir -p "$release/$component/$arch"
+                dir="$release/$component/$arch"
+                [ -d "$dir" ] || {
+                    mkdir -p "$dir"
+                    createrepo -q -c $dir/.cache $dir
+                }
             done
         done
         data+="${data:+, }$release: [$options]"
