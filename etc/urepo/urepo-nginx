@@ -4,7 +4,6 @@ server {
     index index.html index.htm;
     server_name localhost;
     location / {
-        try_files $uri $uri/ $uri/index.html;
         autoindex on;
     }
     # Upload form should be submitted to this location
