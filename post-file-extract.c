@@ -1,6 +1,6 @@
 /* 
  * This utility was created because nginx 1.3.9+ doesn't have http upload module any more.
- * This utility is accepting post request on stdin and saves in current directory files
+ * This utility accepts post request on stdin and saves in current directory files
  * from request if any. File data is removed from post request, rest part of post request
  * is piped through unchanged.
  *
@@ -53,12 +53,12 @@ void die(const char * format, ...) {
     exit(1);
 }
 
-// This function processes end of Content-Disposition string
+// This function processes Content-Disposition string
 // It tries to locate filename, strips path if any and openes
 // file in exclusive write mode in current directory.
 // Returns FILE * in case of success, NULL if Content-Disposition
 // string has no filename
-FILE *open_file(char *buf, int length) {
+FILE *open_file(char *buf, int *length) {
     char *file_name = NULL;     // pointer to filename
     char *file_name_eos = NULL; // pointer to end of string with filename
     char *c = NULL;             // temporary pointer
@@ -66,7 +66,7 @@ FILE *open_file(char *buf, int length) {
     char t = 0;                 // temporary value
 
     // scanning string
-    for (file_name = buf; file_name < buf + length - FILENAME_LEN; file_name++) {
+    for (file_name = buf; file_name < buf + *length - FILENAME_LEN; file_name++) {
         if (memcmp(file_name, FILENAME_STR, FILENAME_LEN) != 0) {
             continue; // filename not found, let's go to next loop iteration
         }
@@ -76,15 +76,21 @@ FILE *open_file(char *buf, int length) {
         // TODO we are looking for terminating quote
         // TODO this means filename can't have embedded quotes
         // TODO not a huge deal for now, but let's not forget about this
-        file_name_eos = memchr(file_name, '"', length - (file_name - buf));
+        file_name_eos = memchr(file_name, '"', *length - (file_name - buf));
         // if terminating quote wasn't found something is wrong
         if (file_name_eos == NULL) {
-            die("Malformed filename in \"%.*s\" string\n", length, buf);
+            die("Malformed filename in \"%.*s\" string\n", *length, buf);
         }
         // now let's scan filename starting with end and strip off path if any
         for (c = file_name_eos - 1; c > file_name; c--) {
             if (*c == '\\' || *c == '/') {
-                file_name = c + 1;
+                c += 1;
+                // if filename has path we strip it in place and make string shorter
+                memmove(file_name, c, *length - (c - buf));
+                // we need to update length of the original string so that it would
+                // be outputted correctly
+                *length -= (c - file_name);
+                file_name_eos -= (c - file_name);
                 break;
             }
         }
@@ -93,12 +99,13 @@ FILE *open_file(char *buf, int length) {
         t = *file_name_eos;
         // substitute it with 0
         *file_name_eos = 0;
-        // open file and check if we are good
+        // open file using write exclusive mode and check if we are good
+        // if file with this name already exists fopen() would fail
         out_file = fopen(file_name, "wx");
         if (out_file == NULL) {
             die("Failed to open file %s for writing\n", file_name);
         }
-        // restore char since this would be printed
+        // restore char so that original string would be outputted correctly
         *file_name_eos = t;
         return out_file;
     }
@@ -106,7 +113,7 @@ FILE *open_file(char *buf, int length) {
 }
 
 // this function processes chunk of data read from stdout
-// if this could be line from post request (delimited by newlines)
+// if this is line from post request (delimited by newlines)
 // we use parse_string flag to look for post strings in the line
 void process_data(char *buf, int length, int parse_string) {
     static int state = STATE_NONE; // parser state
@@ -114,7 +121,7 @@ void process_data(char *buf, int length, int parse_string) {
     static FILE *post_file = NULL; // file to be saved
     static long file_size = 0;     // file size, need this to truncate file after save
 
-    // TODO can't init out_file with stdout, may be there is better way than this if
+    // TODO can't init out_file with stdout, may be there is better way to do this
     if (out_file == NULL) {
         out_file = stdout;
     }
@@ -125,7 +132,12 @@ void process_data(char *buf, int length, int parse_string) {
             case STATE_BOUNDARY_FOUND:
                 if (length > CONTENT_DISPOSITION_LEN && memcmp(buf, CONTENT_DISPOSITION_STR, CONTENT_DISPOSITION_LEN) == 0) {
                     // if found - let's try to find filename
-                    post_file = open_file(buf + CONTENT_DISPOSITION_LEN, length - CONTENT_DISPOSITION_LEN);
+                    // TODO we could pass (buf + CONTENT_DISPOSITION_LEN, length - CONTENT_DISPOSITION_LEN)
+                    // TODO to save cpu cycles on finding filename in the string, but if filename contains path
+                    // TODO we strip it in place and string becomes shorter. In order to output it correctly
+                    // TODO later in this function we need to change length and in order to do this we need to
+                    // TODO pass not value, but pointer.
+                    post_file = open_file(buf, &length);
                     // if filename was found and file opened successfully - state is advanced
                     if (post_file != NULL) {
                         state = STATE_FILE_OPENED;
