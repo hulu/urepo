@@ -17,29 +17,21 @@ CONFIG=/etc/urepo/urepo.conf
     exit
 }
 
-# this script get's data via POST requests, need to know boundary to parse input
-boundary=${CONTENT_TYPE##*=}
-# let's get all input and strip '\r' symbols
-stdin=$(tr -d '\r')
-# now we parse POST body, each entry is transformed into string like "var,val"
-# where var is field name and val is field value
-for i in $(echo $stdin|sed -e "s/--${boundary}-*/\n/g" -e 's/ Content-Disposition: form-data; name="\([^"]*\)" */\1,/g'); do
-    # extract variable name ...
-    var=$(echo $i|cut -f1 -d,)
-    # ... and value ...
-    val=$(echo $i|cut -f2 -d,)
-    # ... and declare variable, this should be secure since neither var nor val are evaluated
-    declare ${var//./_}="$val"
-done
+cgi_dir=$(cd $(dirname $0) && pwd)
+
+cd $UREPO_UPLOAD_DIR
 
 # if upload dir contains files not processed for 1 hour - those are deleted
 find $UREPO_UPLOAD_DIR -type f -amin +60 -exec rm -f {} \;
 
-# we process files, located only in upload directory
-[[ $file1_path =~ ^$UREPO_UPLOAD_DIR ]] || {
-    echo "Bad file path: $file1_path"
-    exit
-}
+# post-file-extract saves uploaded file to current dir, remaining post request goes through unchanged
+# awk is used to extract parameters from post request in form "declare var=val"
+# those declarations are executed in current shell context, since strings are not evaluated this is secure
+. <($cgi_dir/post-file-extract|awk 'BEGIN {getline RS; RS = RS "?(--)?\r\n";} {gsub(/[\n\r]/, ""); sub(/.* name=\"/, "declare "); sub(/\"Content-Type: .*/, ""); sub(/; [^\"]*\"/, ""); sub(/\"/, "=\""); sub(/$/, "\""); print;}')
+
+[ -z "${file1:-}" ] && echo "Failed to extract file from post request" && exit
+
+file1_path=$UREPO_UPLOAD_DIR/$file1
 
 # if we are not oldest script instance running let's wait for earlier instances to complete
 while [ "$$" != "$(pgrep -o -f $0)" ] ; do
@@ -47,14 +39,14 @@ while [ "$$" != "$(pgrep -o -f $0)" ] ; do
 done
 
 # let's figure out file extension
-ext=${file1_name##*.}
+ext=${file1##*.}
 # and determine handler for this file
-handler="$(dirname $0)/handler-${ext}"
+handler="$cgi_dir/handler-${ext}"
 # if handler exists - let's proceed, otherwise we report error an delete file
 if [ -r "$handler" ] ; then
     . $handler
 else
-    echo "No handler for $file1_name, removing file"
+    echo "No handler for $file1, removing file"
     rm -f $file1_path
 fi
 

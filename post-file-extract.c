@@ -12,6 +12,8 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <stdarg.h>
+#include <unistd.h>
+#include <sys/types.h>
 
 // constants for state machine
 #define STATE_NONE                  0

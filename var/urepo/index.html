@@ -28,12 +28,11 @@
 </head>
 <body>
     <h1>Select file to upload to repository</h1>
-    <form name="upload" method="POST" enctype="multipart/form-data" action="/upload">
+    <form name="upload" method="POST" enctype="multipart/form-data" action="/cgi/process-file">
         <select id="dist" name="dist"></select>
         <select id="branch" name="branch"></select>
         <input type="file" name="file1">
         <input type="submit" name="submit" value="Upload">
-        <input type="hidden" name="test" value="value">
     </form>
 </body>
 </html>

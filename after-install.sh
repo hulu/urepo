@@ -9,13 +9,13 @@ configure_urepo() {
     # json would contain entries like: release_name: [branch_name1, branch_name2, ...]
     data=""
     # let's create rpm directory hierarchy
-    mkdir -p $RPM_REPO_ROOT && cd $RPM_REPO_ROOT && chmod -R +r .
+    mkdir -p $RPM_REPO_ROOT && chmod -R +r $RPM_REPO_ROOT
     for release in $RPM_RELEASES; do
         options=""
         for component in $RPM_COMPONENTS; do
             options+="${options:+, }\"$component\""
             for arch in $RPM_ARCHITECTURES; do
-                dir="$release/$component/$arch"
+                dir="$RPM_REPO_ROOT/$release/$component/$arch"
                 [ -d "$dir" ] || {
                     mkdir -p "$dir"
                     createrepo -q -c $dir/.cache $dir
@@ -68,6 +68,7 @@ configure_urepo() {
     # and insert json for upload form generation
     sed -i -e "s/\(var data = {\).*\(};\)/\1$data\2/" $UREPO_ROOT/index.html
     # let's enable urepo nginx config
+    rm -f /etc/nginx/sites-enabled/default
     ln -nsf /etc/urepo/urepo-nginx /etc/nginx/sites-enabled/urepo-nginx
     # and restart nginx
     /etc/init.d/nginx restart

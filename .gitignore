@@ -1,3 +1,5 @@
 *.swp
 *.deb
 *.rpm
+build
+post-file-extract
