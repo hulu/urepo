@@ -46,7 +46,9 @@ configure_urepo() {
     # since urepo is not working as root not much can be done here
     chmod 0733 $UREPO_UPLOAD_DIR
     # let's update file ownership according to user we are working as
-    chown -R www-data:www-data $UREPO_UPLOAD_DIR/..
+    chown -R www-data:www-data $UREPO_ROOT
+    mkdir -p $(dirname $UREPO_LOG)
+    chown -R www-data:www-data $(dirname $UREPO_LOG)
     # now let's set hostname in nginx config
     host_name=$(hostname -f)
     sed -i -e "s/server_name[^;]*;/server_name ${host_name};/" /etc/urepo/urepo-nginx
