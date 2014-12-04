@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PKG_VERSION="1.2"
+PKG_VERSION="2.0.0"
 PKG_NAME="urepo-uploader"
 
 PKG_DESCRIPTION="Uploading tool for urepo (universal repository for linux binary packages)"
