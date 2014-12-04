@@ -1,4 +1,4 @@
-[ -z "$(ls $RPM_REPO_ROOT/$dist/$branch/*/$file1 2>/dev/null)" ] && echo "$file1 not found" && exit
+[ -z "$(ls $RPM_REPO_ROOT/$dist/$branch/*/$file1 2>/dev/null)" ] && log "$file1 not found" && exit
 
 rm -f $RPM_REPO_ROOT/$dist/$branch/*/$file1 $RPM_REPO_ROOT/$dist/$branch/*/.cache/${file1}-*
 
@@ -6,4 +6,4 @@ for dir in $RPM_REPO_ROOT/$dist/$branch/*; do
     createrepo -q -c $dir/.cache $dir
 done
 
-echo "$file1 deleted"
+log "$file1 deleted"

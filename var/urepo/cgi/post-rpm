@@ -1,5 +1,5 @@
 pkg_data=$(rpm -qpi $file1_path 2>&1) || {
-    echo "$file1_name is not rpm package"
+    log "$file1_name is not rpm package"
     rm -f $file1_path
     exit
 }
@@ -21,12 +21,12 @@ esac
 
 for dir in $dirs; do
     [ -d "$dir" ] || {
-        echo "No such directory: $dir"
+        log "No such directory: $dir"
         rm -f $file1_path
         exit
     }
     [ -r "$dir/$full_pkg_name" ] && {
-        echo "File $dir/$full_pkg_name already exists, can't overwrite"
+        log "File $dir/$full_pkg_name already exists, can't overwrite"
         rm -f $file1_path
         exit
     }
@@ -39,7 +39,7 @@ chmod 0644 $file1_path
 for dir in $dirs; do
     ln -f $file1_path $dir/$full_pkg_name
     createrepo -q -c $dir/.cache $dir
-    echo "$full_pkg_name added to $dir"
 done
 
+log "$full_pkg_name added ok"
 rm -f $file1_path

@@ -1,7 +1,7 @@
 cd $DEB_REPO_ROOT
 
 pkg_data=$(dpkg-deb --info $file1_path 2>&1) || {
-    echo "$file1_name is not deb package"
+    log "$file1_name is not deb package"
     rm -f $file1_path
     exit
 }
@@ -12,11 +12,11 @@ full_pkg_name=${pkg_name}_${pkg_version}_${pkg_arch}.deb
 
 pool_dir=pool/$dist/$branch
 [ -d "$pool_dir" ] || {
-    echo "Bad pool directory: $pool_dir"
+    log "Bad pool directory: $pool_dir"
     exit
 }
 [ -r "$pool_dir/$full_pkg_name" ] && {
-    echo "File $pool_dir/$full_pkg_name already exists, can't overwrite"
+    log "File $pool_dir/$full_pkg_name already exists, can't overwrite"
     rm -f $file1_path
     exit
 }
@@ -27,5 +27,5 @@ chmod 0644 $pool_dir/$full_pkg_name
 
 . $cgi_dir/run-apt-ftparchive
 
-echo "$pool_dir/$full_pkg_name added ok"
+log "$pool_dir/$full_pkg_name added ok"
 

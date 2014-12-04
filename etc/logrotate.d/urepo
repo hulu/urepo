@@ -1,0 +1,11 @@
+/var/log/urepo.log
+{
+    rotate 10
+    daily
+    size 100k
+    missingok
+    notifempty
+    compress
+    delaycompress
+}
+

@@ -20,7 +20,7 @@ pkg: bin
 	    --description $(PKG_DESCRIPTION) \
 	    --after-install ../after-install.sh \
 	    --before-remove ../before-remove.sh \
-	    -s dir -t deb -v $(PKG_VERSION) -n $(PKG_NAME) `find {var/urepo,etc/urepo} -type f` && \
+	    -s dir -t deb -v $(PKG_VERSION) -n $(PKG_NAME) `find . -type f` && \
 	rm -rf `ls|grep -v deb$$`
 
 

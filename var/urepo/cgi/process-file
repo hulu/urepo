@@ -17,6 +17,11 @@ CONFIG=/etc/urepo/urepo.conf
     exit
 }
 
+log() {
+    echo $1
+    echo $(date +"%Y-%m-%d %H:%M:%S") $REMOTE_ADDR $1 >>$UREPO_LOG
+}
+
 cgi_dir=$(cd $(dirname $0) && pwd)
 
 cd $UREPO_UPLOAD_DIR
@@ -31,11 +36,11 @@ method=${REQUEST_METHOD,,}
 case "$method" in
     post) cmd="$cgi_dir/extract-post-file" ;;
     delete) cmd=cat ;;
-    *) echo "Method \"$method\" is not supported" && exit ;;
+    *) log "Method \"$method\" is not supported" && exit ;;
 esac
 
 . <($cmd|awk 'BEGIN {getline RS; RS = RS "?(--)?\r\n";} {gsub(/[\n\r]/, ""); sub(/.* name=\"/, "declare "); sub(/\"Content-Type: .*/, ""); sub(/; [^\"]*\"/, ""); sub(/\"/, "=\""); sub(/$/, "\""); print;}')
-[ -z "${file1:-}" ] && echo "Failed to extract file from post request" && exit
+[ -z "${file1:-}" ] && log "Failed to extract file from post request" && exit
 file1_path=$UREPO_UPLOAD_DIR/$file1
 
 # if we are not oldest script instance running let's wait for earlier instances to complete
@@ -51,7 +56,7 @@ handler="$cgi_dir/${method}-${ext}"
 if [ -r "$handler" ] ; then
     . $handler
 else
-    echo "No handler \"$handler\" found"
+    log "No handler \"$handler\" found"
     rm -f $file1_path
 fi
 
