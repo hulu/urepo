@@ -2,4 +2,4 @@
 *.deb
 *.rpm
 build
-post-file-extract
+extract-post-file
