@@ -40,5 +40,5 @@ done
 pkg_name=$(basename $pkg_path)
 cat $pkg_path |ssh $UREPO_SERVER "cd $UREPO_UPLOAD_DIR && \
     cat - >$pkg_name && \
-    curl -s -F dist=$dist -F branch=$branch -F file1.name=$pkg_name -F file1.path=$UREPO_UPLOAD_DIR/$pkg_name http://127.0.0.1/cgi/process-file"
+    curl -X POST -s -F dist=$dist -F branch=$branch -F file1=$pkg_name http://127.0.0.1/cgi/process-file"
 exit $?
