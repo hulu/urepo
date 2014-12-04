@@ -1,0 +1,12 @@
+cd $DEB_REPO_ROOT
+
+[ -r "pool/$dist/$branch/$file1" ] || {
+    echo "File $file1 not found"
+    exit
+}
+
+rm -f "pool/$dist/$branch/$file1"
+
+. $cgi_dir/run-apt-ftparchive
+
+echo "$file1 deleted"

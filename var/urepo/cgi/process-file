@@ -24,13 +24,18 @@ cd $UREPO_UPLOAD_DIR
 # if upload dir contains files not processed for 1 hour - those are deleted
 find $UREPO_UPLOAD_DIR -type f -amin +60 -exec rm -f {} \;
 
+method=${REQUEST_METHOD,,}
 # post-file-extract saves uploaded file to current dir, remaining post request goes through unchanged
 # awk is used to extract parameters from post request in form "declare var=val"
 # those declarations are executed in current shell context, since strings are not evaluated this is secure
-. <($cgi_dir/post-file-extract|awk 'BEGIN {getline RS; RS = RS "?(--)?\r\n";} {gsub(/[\n\r]/, ""); sub(/.* name=\"/, "declare "); sub(/\"Content-Type: .*/, ""); sub(/; [^\"]*\"/, ""); sub(/\"/, "=\""); sub(/$/, "\""); print;}')
+case "$method" in
+    post) cmd="$cgi_dir/extract-post-file" ;;
+    delete) cmd=cat ;;
+    *) echo "Method \"$method\" is not supported" && exit ;;
+esac
 
+. <($cmd|awk 'BEGIN {getline RS; RS = RS "?(--)?\r\n";} {gsub(/[\n\r]/, ""); sub(/.* name=\"/, "declare "); sub(/\"Content-Type: .*/, ""); sub(/; [^\"]*\"/, ""); sub(/\"/, "=\""); sub(/$/, "\""); print;}')
 [ -z "${file1:-}" ] && echo "Failed to extract file from post request" && exit
-
 file1_path=$UREPO_UPLOAD_DIR/$file1
 
 # if we are not oldest script instance running let's wait for earlier instances to complete
@@ -41,12 +46,12 @@ done
 # let's figure out file extension
 ext=${file1##*.}
 # and determine handler for this file
-handler="$cgi_dir/handler-${ext}"
+handler="$cgi_dir/${method}-${ext}"
 # if handler exists - let's proceed, otherwise we report error an delete file
 if [ -r "$handler" ] ; then
     . $handler
 else
-    echo "No handler for $file1, removing file"
+    echo "No handler \"$handler\" found"
     rm -f $file1_path
 fi
 

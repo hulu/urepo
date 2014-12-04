@@ -16,41 +16,26 @@ configure_urepo() {
             options+="${options:+, }\"$component\""
             for arch in $RPM_ARCHITECTURES; do
                 dir="$RPM_REPO_ROOT/$release/$component/$arch"
-                [ -d "$dir" ] || {
-                    mkdir -p "$dir"
-                    createrepo -q -c $dir/.cache $dir
-                }
+                mkdir -p "$dir"
+                createrepo -q -c $dir/.cache $dir
             done
         done
         data+="${data:+, }$release: [$options]"
     done
     # let's create deb directory hierarchy
     mkdir -p $DEB_REPO_ROOT && cd $DEB_REPO_ROOT && chmod -R +r .
-    for codename in $DEB_CODENAMES; do
+    for dist in $DEB_CODENAMES; do
         options=""
-        for component in $DEB_COMPONENTS; do
-            options+="${options:+, }\"$component\""
-            pool_dir=pool/$codename/$component
+        for branch in $DEB_COMPONENTS; do
+            options+="${options:+, }\"$branch\""
+            pool_dir=pool/$dist/$branch
             mkdir -p $pool_dir
             for arch in $DEB_ARCHITECTURES; do
-                data_dir=dists/$codename/$component/binary-$arch
-                mkdir -p $data_dir
-                # lack of Packages file would result apt-get update to fail
-                # because of that we need to create those if they are missing
-                [ -r "$data_dir/Packages" ] || {
-                    apt-ftparchive -d $data_dir/.cache --arch ${arch} packages $pool_dir > $data_dir/Packages
-                    gzip -c $data_dir/Packages >$data_dir/Packages.gz
-                }
+                mkdir -p dists/$dist/$branch/binary-$arch
             done
         done
-        # now let's update Release file
-        apt-ftparchive \
-            -o APT::FTPArchive::Release::Suite="$codename" \
-            -o APT::FTPArchive::Release::Codename="$codename" \
-            -o APT::FTPArchive::Release::Architectures="$DEB_ARCHITECTURES" \
-            -o APT::FTPArchive::Release::Components="$DEB_COMPONENTS" \
-            release dists/$codename > dists/$codename/Release
-        data+=", $codename: [$options]"
+        . $UREPO_ROOT/cgi/run-apt-ftparchive
+        data+=", $dist: [$options]"
     done
     # let's create directory where files would be uploaded
     mkdir -p $UREPO_UPLOAD_DIR
