@@ -24,7 +24,7 @@ In order to delete package DELETE request can be used:
 ```
 curl -X DELETE -s -F dist=centos6 \
     -F branch=stable \
-    -F file1=@pkg.rpm \
+    -F file1=pkg.rpm \
     http://urepo.server/cgi/process-file
 ```
 
