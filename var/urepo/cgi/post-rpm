@@ -38,7 +38,7 @@ chmod 0644 $file1_path
 
 for dir in $dirs; do
     ln -f $file1_path $dir/$full_pkg_name
-    createrepo -q -c $dir/.cache $dir
+    createrepo -s sha -q -c $dir/.cache $dir
 done
 
 log "$full_pkg_name added ok"
