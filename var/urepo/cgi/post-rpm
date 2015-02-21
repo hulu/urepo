@@ -3,7 +3,7 @@ pkg_data=$(rpm -qpi $file1_path 2>&1) || {
     rm -f $file1_path
     exit
 }
-pkg_name=$(echo "$pkg_data"|grep "^Name"|awk '{print $3}')
+pkg_name=$(echo "$pkg_data"|grep "^Name *: "|awk '{print $3}')
 pkg_version=$(echo "$pkg_data"|grep "^Version"|awk '{print $3}')
 pkg_arch=$(echo "$pkg_data"|grep "^Architecture:"|awk '{print $2}')
 pkg_release=$(echo "$pkg_data"|grep "^Release"|awk '{print $3}')
