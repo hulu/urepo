@@ -1,5 +1,5 @@
 PKG_NAME=urepo
-PKG_VERSION=2.0.0
+PKG_VERSION=2.0.1
 PKG_DESCRIPTION="Universal repository for linux binary packages"
 
 .PHONY: all
@@ -17,6 +17,7 @@ pkg: bin
 	cd build && \
 	fpm --deb-user root --deb-group root \
 	    -d nginx -d fcgiwrap -d createrepo -d apt-utils \
+	    --deb-no-default-config-files \
 	    --description $(PKG_DESCRIPTION) \
 	    --after-install ../after-install.sh \
 	    --before-remove ../before-remove.sh \
