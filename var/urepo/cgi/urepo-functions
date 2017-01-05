@@ -1,0 +1,179 @@
+log() {
+    echo "$1" >&2
+    echo "$(date +"%Y-%m-%d %H:%M:%S") $REMOTE_ADDR $1" >>$UREPO_LOG
+}
+    
+generate_pkg_control() {
+    local pkg_path="$1"
+    pkg_data=$(ar p "$pkg_path" control.tar.gz|tar -Ozxf - ./control) || {
+        log "Error: failed to extract control data from \"$pkg_path\""
+        rm -f "$pkg_path"
+        return 1
+    }
+    
+    pkg_name=$(echo "$pkg_data"|grep "^Package:"|awk '{print $2}')
+    pkg_version=$(echo "$pkg_data"|grep "^Version:"|awk '{print $2}')
+    pkg_arch=$(echo "$pkg_data"|grep "^Architecture:"|awk '{print $2}')
+    full_pkg_name=${pkg_name}_${pkg_version}_${pkg_arch}.deb
+    new_pkg_path="$(dirname "$pkg_path")/$full_pkg_name"
+    
+    pkg_data+="
+Filename: $new_pkg_path
+Size: $(stat -c %s "$pkg_path")
+MD5sum: $(md5sum $pkg_path|awk '{print $1}')
+SHA1: $(sha1sum $pkg_path|awk '{print $1}')
+SHA256: $(sha256sum $pkg_path|awk '{print $1}')
+SHA512: $(sha512sum $pkg_path|awk '{print $1}')
+"
+    if [ "$pkg_path" != "$new_pkg_path" ] ; then
+        log "Info: renaming \"$pkg_path\" to \"$new_pkg_path\""
+        (ln -P "$pkg_path" "$new_pkg_path" && rm -f "$pkg_path") || {
+            log "Error: can't overwrite \"$new_pkg_path\" with \"$pkg_path\", deleting latter"
+            rm -f "$pkg_path"
+            return 1
+        }
+    fi
+    echo "$pkg_data" > "${new_pkg_path}.control"
+    return 0
+}
+
+generate_release() {
+    local size
+    declare -A checksum=(
+        [MD5Sum]=md5sum
+        [SHA1]=sha1sum
+        [SHA256]=sha256sum
+        [SHA512]=sha512sum
+    )
+    echo "Codename: $dist
+Date: $(date -u +"%a, %d %b %Y %T %Z")
+Suite: $dist"
+    cd $DEB_REPO_ROOT/dists/$dist
+    for label in ${!checksum[@]}; do
+        echo "${label}:"
+        for pkg_data in */binary-*/Packages*; do
+            size=$(stat -c %s $pkg_data)
+            ${checksum[$label]} $pkg_data|awk -vsize=$size '{printf(" %s %16d %s\n", $1, size, $2)}'
+        done
+    done
+}
+
+generate_repo_data() {
+    local arch pkg failures=0
+    cd $DEB_REPO_ROOT
+    for pkg in $(find pool/$dist/$branch/ -type f -regex ".*[.]deb$"); do
+        [ -r "${pkg}.control" ] && continue
+        generate_pkg_control "$pkg" || ((failures++))
+    done
+    for arch in i386 amd64; do 
+        find $DEB_REPO_ROOT/pool/$dist/$branch/ -type f -regex ".*_\($arch\|all\)[.]deb[.]control$" -exec cat {} \; >$DEB_REPO_ROOT/dists/$dist/$branch/binary-${arch}/Packages
+        gzip -c $DEB_REPO_ROOT/dists/$dist/$branch/binary-${arch}/Packages >$DEB_REPO_ROOT/dists/$dist/$branch/binary-${arch}/Packages.gz
+        bzip2 -c $DEB_REPO_ROOT/dists/$dist/$branch/binary-${arch}/Packages >$DEB_REPO_ROOT/dists/$dist/$branch/binary-${arch}/Packages.bz2
+    done
+    generate_release >$DEB_REPO_ROOT/dists/$dist/Release
+    return "$failures"
+}
+
+post_deb() {
+    pool_dir="$DEB_REPO_ROOT/pool/$dist/$branch"
+
+    [ -d "$pool_dir" ] || {
+        log "Error: bad pool directory: $pool_dir"
+        rm -f "$file1_path"
+        return
+    }
+    target="${pool_dir}/$(basename "$file1_path")"
+    (set -C && cat "$file1_path" > "${target}") || {
+        log "Error: file \"${target}\" already exists, can't overwrite"
+        rm -f "$file1_path"
+        return
+    }
+    
+    rm -f "$file1_path"
+    chmod 0644 "$target"
+    
+    generate_repo_data || {
+        log "Warning: issues encountered while adding $target"
+        return
+    }
+    log "Info: $target added ok"
+}
+
+delete_deb() {
+    cd $DEB_REPO_ROOT
+    
+    [ -r "pool/$dist/$branch/$file1" ] || {
+        log "Error: file $file1 not found"
+        exit
+    }
+    
+    rm -f "pool/${dist}/${branch}/${file1}"
+    rm -f "pool/${dist}/${branch}/${file1}.control"
+    
+    if generate_repo_data; then
+        log "Info: $file1 deleted ok"
+    else
+        log "Warning: issues encountered while deleting $file1"
+    fi
+}
+
+post_rpm() {
+    pkg_data=$(rpm -qpi $file1_path 2>&1) || {
+        log "Error: $file1_name is not rpm package"
+        rm -f $file1_path
+        exit
+    }
+    pkg_name=$(echo "$pkg_data"|grep "^Name *: "|awk '{print $3}')
+    pkg_version=$(echo "$pkg_data"|grep "^Version"|awk '{print $3}')
+    pkg_arch=$(echo "$pkg_data"|grep "^Architecture:"|awk '{print $2}')
+    pkg_release=$(echo "$pkg_data"|grep "^Release"|awk '{print $3}')
+    full_pkg_name=${pkg_name}-${pkg_version}-${pkg_release}.${pkg_arch}.rpm
+    
+    dirs=""
+    case $pkg_arch in
+        noarch) for dir in $RPM_REPO_ROOT/$dist/$branch/*; do
+                [[ "$dir" =~ SRPMS$ ]] || dirs+="$dir "
+            done
+            ;;
+        i[56]86) dirs=$RPM_REPO_ROOT/$dist/$branch/i386 ;;
+        *) dirs=$RPM_REPO_ROOT/$dist/$branch/$pkg_arch ;;
+    esac
+    
+    for dir in $dirs; do
+        [ -d "$dir" ] || {
+            log "Error: no such directory: $dir"
+            rm -f $file1_path
+            exit
+        }
+        [ -r "$dir/$full_pkg_name" ] && {
+            log "Error: file $dir/$full_pkg_name already exists, can't overwrite"
+            rm -f $file1_path
+            exit
+        }
+    done
+    
+    cp $file1_path ${file1_path}$$
+    mv -f ${file1_path}$$ $file1_path
+    chmod 0644 $file1_path
+    
+    for dir in $dirs; do
+        ln -f $file1_path $dir/$full_pkg_name
+        createrepo -s sha -q -c $dir/.cache $dir
+    done
+    
+    log "Info: $full_pkg_name added ok"
+    rm -f $file1_path
+}
+
+delete_rpm() {
+    [ -z "$(ls $RPM_REPO_ROOT/$dist/$branch/*/$file1 2>/dev/null)" ] && log "$file1 not found" && exit
+    
+    rm -f $RPM_REPO_ROOT/$dist/$branch/*/$file1 $RPM_REPO_ROOT/$dist/$branch/*/.cache/${file1}-*
+    
+    for dir in $RPM_REPO_ROOT/$dist/$branch/*; do
+        createrepo -s sha -q -c $dir/.cache $dir
+    done
+    
+    log "Info: $file1 deleted"
+}
+

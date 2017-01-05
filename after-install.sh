@@ -2,8 +2,10 @@
 
 set -u
 
-# let's load urepo config file
+# let's load urepo config file ...
 . /etc/urepo/urepo.conf
+# ... and functions
+. $UREPO_ROOT/cgi/urepo-functions
 # this variable would contain json for the page, showing upload form
 # json would contain entries like: release_name: [branch_name1, branch_name2, ...]
 data=""
@@ -32,8 +34,8 @@ for dist in $DEB_CODENAMES; do
         for arch in $DEB_ARCHITECTURES; do
             mkdir -p dists/$dist/$branch/binary-$arch
         done
+        ( generate_repo_data )
     done
-    . $UREPO_ROOT/cgi/run-apt-ftparchive
     data+=", $dist: [$options]"
 done
 # let's create directory where files would be uploaded

@@ -13,16 +13,13 @@ echo
 CONFIG=/etc/urepo/urepo.conf
 
 . $CONFIG || {
-    echo "Failed to load $CONFIG"
+    echo "Error: failed to load $CONFIG"
     exit
 }
 
-log() {
-    echo $1
-    echo $(date +"%Y-%m-%d %H:%M:%S") $REMOTE_ADDR $1 >>$UREPO_LOG
-}
-
 cgi_dir=$(cd $(dirname $0) && pwd)
+
+. $cgi_dir/urepo-functions
 
 cd $UREPO_UPLOAD_DIR
 
@@ -35,13 +32,16 @@ method=${REQUEST_METHOD,,}
 # those declarations are executed in current shell context, since strings are not evaluated this is secure
 case "$method" in
     post) cmd="$cgi_dir/extract-post-file" ;;
-    delete) cmd=cat ;;
-    *) log "Method \"$method\" is not supported" && exit ;;
+    delete)
+        [ "$HTTP_HOST" != "127.0.0.1" ] && log "Error: delete from $HTTP_HOST is prohibited" && exit
+        cmd=cat
+        ;;
+    *) log "Error: method \"$method\" is not supported" && exit ;;
 esac
 
 . <($cmd|awk 'BEGIN {getline RS; RS = RS "?(--)?\r\n";} {gsub(/[\n\r]/, ""); sub(/.* name=\"/, "declare "); sub(/\"Content-Type: .*/, ""); sub(/; [^\"]*\"/, ""); sub(/\"/, "=\""); sub(/$/, "\""); print;}')
-[ -z "${file1:-}" ] && log "Failed to extract file from post request" && exit
-file1_path=$UREPO_UPLOAD_DIR/$file1
+[ -z "${file1:-}" ] && log "Error: failed to extract file from post request" && exit
+file1_path="$UREPO_UPLOAD_DIR/$file1"
 
 # if we are not oldest script instance running let's wait for earlier instances to complete
 while [ "$$" != "$(pgrep -o -f $0)" ] ; do
@@ -49,14 +49,13 @@ while [ "$$" != "$(pgrep -o -f $0)" ] ; do
 done
 
 # let's figure out file extension
-ext=${file1##*.}
+ext="${file1##*.}"
 # and determine handler for this file
-handler="$cgi_dir/${method}-${ext}"
-# if handler exists - let's proceed, otherwise we report error an delete file
-if [ -r "$handler" ] ; then
-    . $handler
+handler="${method}_${ext}"
+# if handler exists - let's proceed, otherwise we report error and delete file
+if type -t "$handler" | grep -q function; then
+    "$handler"
 else
-    log "No handler \"$handler\" found"
-    rm -f $file1_path
+    log "Error: no handler found for \"$file1\""
+    rm -f "$file1_path"
 fi
-
