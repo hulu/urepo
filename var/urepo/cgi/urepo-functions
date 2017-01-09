@@ -1,6 +1,6 @@
 log() {
     echo "$1" >&2
-    echo "$(date +"%Y-%m-%d %H:%M:%S") $REMOTE_ADDR $1" >>$UREPO_LOG
+    echo "$(date +"%Y-%m-%d %H:%M:%S") ${REMOTE_ADDR:-unknown} $1" >>$UREPO_LOG
 }
     
 generate_pkg_control() {
