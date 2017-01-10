@@ -18,7 +18,7 @@ for release in $RPM_RELEASES; do
         for arch in $RPM_ARCHITECTURES; do
             dir="$RPM_REPO_ROOT/$release/$component/$arch"
             mkdir -p "$dir"
-            createrepo -q -c $dir/.cache $dir
+            createrepo -s sha -q -c $dir/.cache $dir
         done
     done
     data+="${data:+, }$release: [$options]"
