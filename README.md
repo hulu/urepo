@@ -143,7 +143,7 @@ Urepo-upload is build by running build-urepo-upload.sh, which creates both .deb 
 
 ## Add your urepo server to your package manager
 
-## Debian/Ubuntu
+### Debian/Ubuntu
 
 Do as follow:
 
@@ -153,12 +153,12 @@ echo 'deb [trusted=yes] http://myurepo.server/deb {DEB_CODENAMES} {DEB_COMPONENT
 
 Now you can update and list the packages from you own urepo server:
 
-``` bash
+```
 apt update
 grep ^Package: /var/lib/apt/lists/myurepo_*_Packages
 ```
 
-## CentOS
+### CentOS
 
 *work in progress*
 
