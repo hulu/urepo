@@ -135,7 +135,7 @@ dpkg -i urepo_x.y.z_amd64.deb
 
 ### Check
 
-Now that it's intalled, you can check that it's running. Open up **/etc/nginx/sites-enabled/urepo-nginx** and open the **server_name** in your brower, if you see an upload form, then it works !
+Now that it's installed, you can check that it's running. Open up **/etc/nginx/sites-enabled/urepo-nginx** and open the **server_name** in your brower, if you see an upload form, then it works !
 
 ## Building urepo-upload
 
@@ -148,7 +148,7 @@ Urepo-upload is build by running build-urepo-upload.sh, which creates both .deb 
 Do as follow:
 
 ```
-echo 'deb [trusted=yes] http://myurepo.server/deb {DEB_CODENAMES} {DEB_COMPONENTS' > /etc/apt/sources.list.d/myurepo.list
+echo 'deb [trusted=yes] http://myurepo.server/deb {DEB_CODENAMES} {DEB_COMPONENTS}' > /etc/apt/sources.list.d/myurepo.list
 ```
 
 Now you can update and list the packages from you own urepo server:
