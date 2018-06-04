@@ -1,5 +1,5 @@
 PKG_NAME=urepo
-PKG_VERSION=2.1.2
+PKG_VERSION=2.2.0
 PKG_DESCRIPTION="Universal repository for linux binary packages"
 
 .PHONY: all
@@ -12,7 +12,7 @@ clean:
 	rm -rf extract-post-file build
 pkg: bin
 	mkdir build
-	cp -r {var,etc} build/
+	cp -r {usr,var,etc} build/
 	cp extract-post-file build/var/urepo/cgi
 	cd build && \
 	fpm --deb-user root --deb-group root \
@@ -22,7 +22,7 @@ pkg: bin
 	    --after-install ../after-install.sh \
 	    --before-remove ../before-remove.sh \
 	    -s dir -t deb -v $(PKG_VERSION) -n $(PKG_NAME) `find . -type f` && \
-	rm -rf `ls|grep -v deb$$`
+	ls | grep -v deb$$ | xargs rm -rf
 
 
 
