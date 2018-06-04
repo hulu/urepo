@@ -12,7 +12,7 @@ clean:
 	rm -rf extract-post-file build
 pkg: bin
 	mkdir build
-	cp -r {usr,var,etc} build/
+	cp -r {var,etc} build/
 	cp extract-post-file build/var/urepo/cgi
 	cd build && \
 	fpm --deb-user root --deb-group root \
