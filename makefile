@@ -22,7 +22,4 @@ pkg: bin
 	    --after-install ../after-install.sh \
 	    --before-remove ../before-remove.sh \
 	    -s dir -t deb -v $(PKG_VERSION) -n $(PKG_NAME) `find . -type f` && \
-	ls | grep -v deb$$ | xargs rm -rf
-
-
-
+	find . ! -name '*.deb' -delete
