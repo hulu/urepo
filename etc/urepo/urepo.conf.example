@@ -3,12 +3,12 @@ UREPO_UPLOAD_DIR=$UREPO_ROOT/upload
 UREPO_LOG=/var/log/urepo/urepo.log
 
 DEB_REPO_ROOT=/var/urepo/deb
-DEB_CODENAMES="precise trusty xenial"
+DEB_CODENAMES="trusty xenial bionic"
 DEB_ARCHITECTURES="amd64 i386"
-DEB_COMPONENTS="stable testing tebibox"
+DEB_COMPONENTS="stable testing"
 
 RPM_REPO_ROOT=/var/urepo/rpm
-RPM_RELEASES="centos5 centos6"
+RPM_RELEASES="centos6 centos7"
 RPM_ARCHITECTURES="i386 x86_64 SRPMS"
 RPM_COMPONENTS="stable testing"
 
