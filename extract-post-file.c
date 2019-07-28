@@ -118,7 +118,9 @@ FILE *open_file(char *buf, int *length) {
 // if this is line from post request (delimited by newlines)
 // we use parse_string flag to look for post strings in the line
 void process_data(char *buf, int length, int parse_string) {
-    static int state = STATE_NONE; // parser state
+    // parser state is initialized to STATE_BOUNDARY_FOUND since boundary string is the
+    // 1st thing we read from stdin so 1st time we get here we are in this state already
+    static int state = STATE_BOUNDARY_FOUND;
     static FILE *out_file = NULL;  // can be stdout or post_file
     static FILE *post_file = NULL; // file to be saved
     static long file_size = 0;     // file size, need this to truncate file after save
