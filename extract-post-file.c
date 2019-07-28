@@ -15,7 +15,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 
-// constants for state machine
+// constants for the state machine
 #define STATE_NONE                  0
 #define STATE_BOUNDARY_FOUND        1
 #define STATE_FILE_OPENED           2
@@ -37,7 +37,7 @@
 #define EMPTY_LINE_LEN          STRLEN(EMPTY_LINE_STR)
 #define FILENAME_LEN            STRLEN(FILENAME_STR)
 
-// boundary string is stored in separate buffer
+// boundary string is stored in a separate buffer
 // this is 1st line of the input stream
 #define BOUNDARY_BUF_SIZE 128
 char boundary_buf[BOUNDARY_BUF_SIZE];
@@ -61,8 +61,8 @@ void die(const char * format, ...) {
 // Returns FILE * in case of success, NULL if Content-Disposition
 // string has no filename
 FILE *open_file(char *buf, int *length) {
-    char *file_name = NULL;     // pointer to filename
-    char *file_name_eos = NULL; // pointer to end of string with filename
+    char *file_name = NULL;     // pointer to the filename
+    char *file_name_eos = NULL; // pointer to the end of the string with the filename
     char *c = NULL;             // temporary pointer
     FILE *out_file = NULL;      // FILE * pointer that would be returned in case of success
     char t = 0;                 // temporary value
@@ -237,7 +237,7 @@ int main(int argc, const char* argv[]) {
     fputs(boundary_buf, stdout);
     // main loop until we read all data from stdin
     while (!feof(stdin)) {
-        // if while prcessing data in the middle of the buffer we found line starting with newline
+        // if while processing data in the middle of the buffer we found line starting with newline
         // but we don't see newline in the end it is possible that we have incomplete line
         // so we move all unprocessed data to start of the buffer, read more data into the buffer and try to process it again
         data_len = fread(data_ptr, sizeof(char), DATA_BUF_SIZE - (data_ptr - data_buf), stdin) + (data_ptr - data_buf);
