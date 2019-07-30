@@ -1,5 +1,5 @@
 PKG_NAME=urepo
-PKG_VERSION=2.2.2
+PKG_VERSION=2.2.3
 PKG_DESCRIPTION="Universal repository for linux binary packages"
 
 .PHONY: all
