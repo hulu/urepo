@@ -2,7 +2,7 @@ log() {
     echo "$1" >&2
     echo "$(date +"%Y-%m-%d %H:%M:%S") ${REMOTE_ADDR:-unknown} $1" >>$UREPO_LOG
 }
-    
+
 generate_pkg_control() {
     local pkg_path="$1"
     control_file=$(ar t "$pkg_path"|grep ^control)
@@ -29,13 +29,13 @@ generate_pkg_control() {
         rm -f "$pkg_path"
         return 1
     }
-    
+
     pkg_name=$(echo "$pkg_data"|grep "^Package:"|awk '{print $2}')
     pkg_version=$(echo "$pkg_data"|grep "^Version:"|awk '{print $2}')
     pkg_arch=$(echo "$pkg_data"|grep "^Architecture:"|awk '{print $2}')
     full_pkg_name=${pkg_name}_${pkg_version}_${pkg_arch}.deb
     new_pkg_path="$(dirname "$pkg_path")/$full_pkg_name"
-    
+
     pkg_data+="
 Filename: $new_pkg_path
 Size: $(stat -c %s "$pkg_path")
@@ -84,7 +84,7 @@ generate_repo_data() {
         [ -r "${pkg}.control" ] && continue
         generate_pkg_control "$pkg" || ((failures++))
     done
-    for arch in i386 amd64; do 
+    for arch in i386 amd64; do
         find $DEB_REPO_ROOT/pool/$dist/$branch/ -type f -regex ".*_\($arch\|all\)[.]deb[.]control$" -exec cat {} \; >$DEB_REPO_ROOT/dists/$dist/$branch/binary-${arch}/Packages
         gzip -c $DEB_REPO_ROOT/dists/$dist/$branch/binary-${arch}/Packages >$DEB_REPO_ROOT/dists/$dist/$branch/binary-${arch}/Packages.gz
         bzip2 -c $DEB_REPO_ROOT/dists/$dist/$branch/binary-${arch}/Packages >$DEB_REPO_ROOT/dists/$dist/$branch/binary-${arch}/Packages.bz2
@@ -107,10 +107,10 @@ post_deb() {
         rm -f "$file1_path"
         return
     }
-    
+
     rm -f "$file1_path"
     chmod 0644 "$target"
-    
+
     generate_repo_data || {
         log "Warning: issues encountered while adding $target"
         return
@@ -120,15 +120,15 @@ post_deb() {
 
 delete_deb() {
     cd $DEB_REPO_ROOT
-    
+
     [ -r "pool/$dist/$branch/$file1" ] || {
         log "Error: file $file1 not found"
         exit
     }
-    
+
     rm -f "pool/${dist}/${branch}/${file1}"
     rm -f "pool/${dist}/${branch}/${file1}.control"
-    
+
     if generate_repo_data; then
         log "Info: $file1 deleted ok"
     else
@@ -147,7 +147,7 @@ post_rpm() {
     pkg_arch=$(echo "$pkg_data"|grep "^Architecture:"|awk '{print $2}')
     pkg_release=$(echo "$pkg_data"|grep "^Release"|awk '{print $3}')
     full_pkg_name=${pkg_name}-${pkg_version}-${pkg_release}.${pkg_arch}.rpm
-    
+
     dirs=""
     case $pkg_arch in
         noarch) for dir in $RPM_REPO_ROOT/$dist/$branch/*; do
@@ -157,7 +157,7 @@ post_rpm() {
         i[56]86) dirs=$RPM_REPO_ROOT/$dist/$branch/i386 ;;
         *) dirs=$RPM_REPO_ROOT/$dist/$branch/$pkg_arch ;;
     esac
-    
+
     for dir in $dirs; do
         [ -d "$dir" ] || {
             log "Error: no such directory: $dir"
@@ -170,29 +170,40 @@ post_rpm() {
             exit
         }
     done
-    
+
     cp $file1_path ${file1_path}$$
     mv -f ${file1_path}$$ $file1_path
     chmod 0644 $file1_path
-    
+
+    # For packages that get added to multiple architectures (e.g., the same
+    # package ends up in both i386 and x86_64), a hard link to the uploaded
+    # package saves space but will fail when crossing file system boundaries;
+    # what this does is copy the first instance unconditionally and attempt to
+    # hard link subsequent instances, falling back to copying if linking fails.
+    idx=0
     for dir in $dirs; do
-        ln -f $file1_path $dir/$full_pkg_name
+        if [ $idx -eq 0 ]; then
+            cp -f $file1_path $dir/$full_pkg_name
+            newpath=$dir/$full_pkg_name
+            idx=1
+        else
+            ln -f $newpath $dir/$full_pkg_name || cp -f $file1_path $dir/$full_pkg_name
+        fi
         createrepo -s sha -q -c $dir/.cache $dir
     done
-    
+
     log "Info: $full_pkg_name added ok"
     rm -f $file1_path
 }
 
 delete_rpm() {
     [ -z "$(ls $RPM_REPO_ROOT/$dist/$branch/*/$file1 2>/dev/null)" ] && log "$file1 not found" && exit
-    
+
     rm -f $RPM_REPO_ROOT/$dist/$branch/*/$file1 $RPM_REPO_ROOT/$dist/$branch/*/.cache/${file1}-*
-    
+
     for dir in $RPM_REPO_ROOT/$dist/$branch/*; do
         createrepo -s sha -q -c $dir/.cache $dir
     done
-    
+
     log "Info: $file1 deleted"
 }
-
