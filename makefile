@@ -10,7 +10,9 @@ bin:
 	gcc -Wall -O2 -o extract-post-file extract-post-file.c
 clean:
 	rm -rf extract-post-file build
-pkg: bin
+test: bin
+	test/run-test.sh
+pkg: test
 	mkdir build
 	cp -r {var,etc} build/
 	cp extract-post-file build/var/urepo/cgi

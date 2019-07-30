@@ -1,0 +1,13 @@
+--------------------------04673519c52c015c
+Content-Disposition: form-data; name="file1"; filename="1kb.random"
+Content-Type: application/octet-stream
+
+--------------------------04673519c52c015c
+Content-Disposition: form-data; name="param1"
+
+test value1
+--------------------------04673519c52c015c
+Content-Disposition: form-data; name="files"; filename="text.txt"
+Content-Type: text/plain
+
+--------------------------04673519c52c015c--

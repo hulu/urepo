@@ -1,0 +1,17 @@
+--------------------------9c2f6b4480795390
+Content-Disposition: form-data; name="param2"
+
+test value2
+--------------------------9c2f6b4480795390
+Content-Disposition: form-data; name="file1"; filename="1kb.random"
+Content-Type: application/octet-stream
+
+--------------------------9c2f6b4480795390
+Content-Disposition: form-data; name="param1"
+
+test value1
+--------------------------9c2f6b4480795390
+Content-Disposition: form-data; name="files"; filename="text.txt"
+Content-Type: text/plain
+
+--------------------------9c2f6b4480795390--

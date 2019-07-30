@@ -1,0 +1,13 @@
+--------------------------da398c7d53440a86
+Content-Disposition: form-data; name="param2"
+
+test value2
+--------------------------da398c7d53440a86
+Content-Disposition: form-data; name="file1"; filename="1kb.random"
+Content-Type: application/octet-stream
+
+--------------------------da398c7d53440a86
+Content-Disposition: form-data; name="param1"
+
+test value1
+--------------------------da398c7d53440a86--
