@@ -1,0 +1,9 @@
+--------------------------98f57122372c39d4
+Content-Disposition: form-data; name="file1"; filename="1kb.random"
+Content-Type: application/octet-stream
+
+--------------------------98f57122372c39d4
+Content-Disposition: form-data; name="file2"; filename="empty"
+Content-Type: application/octet-stream
+
+--------------------------98f57122372c39d4--

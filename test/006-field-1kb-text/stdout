@@ -1,0 +1,9 @@
+--------------------------d98d873b7f43db1d
+Content-Disposition: form-data; name="param1"
+
+test value1
+--------------------------d98d873b7f43db1d
+Content-Disposition: form-data; name="file1"; filename="1kb.random"
+Content-Type: application/octet-stream
+
+--------------------------d98d873b7f43db1d--
