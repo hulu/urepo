@@ -1,0 +1,8 @@
+Package: urepo
+Version: 2.2.3
+Architecture: amd64
+Depends: nginx, fcgiwrap, createrepo
+Section: default
+Priority: extra
+Maintainer: Hulu
+Description: Universal repository for linux binary packages

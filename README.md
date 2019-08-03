@@ -39,6 +39,7 @@ Drawbacks of current system:
 ## Building urepo
 
 Currently urepo can be installed **only** on Ubuntu or other Debian derivatives.
+Urepo build relies on the ```dpkg-deb``` option ```--root-owner-group``` and will fail if your version of ```dpkg-deb``` doesn't support this option.
 
 ### Requirements
 
@@ -49,10 +50,6 @@ First you'll need to install a few packages to correctly build:
 ```
 apt install git build-essential nginx fcgiwrap createrepo
 ```
-
-#### Install FPM
-
-Urepo requires fpm to run correctly, please do follow the [installation](http://fpm.readthedocs.io/en/latest/installing.html) process before to proceed.
 
 ### Download urepo
 
@@ -84,26 +81,33 @@ We don't cover other parameters since they are more easy to change, for example 
 Now you can build your urepo as follow:
 
 ```
-make pkg
+make
 ```
 
 If all goes well, it should tell you something like this:
 
 ```
 gcc -Wall -O2 -o extract-post-file extract-post-file.c
-mkdir build
+test/run-test.sh
+001-1kb-test ok
+002-empty-test ok
+003-text-test ok
+004-1kb-text-test ok
+005-text-1kb-test ok
+007-1kb-field-test ok
+008-field-1kb-field-test ok
+009-1kb-field-text-test ok
+010-field-1kb-field-text-field-test ok
+Summary: 9 tests passed, 0 tests failed
+mkdir -p build
+rm -rf build/*
 cp -r {var,etc} build/
+cp -r DEBIAN.urepo build/DEBIAN
 cp extract-post-file build/var/urepo/cgi
-cd build && \
-fpm --deb-user root --deb-group root \
-    -d nginx -d fcgiwrap -d createrepo \
-    --deb-no-default-config-files \
-    --description "Universal repository for linux binary packages" \
-    --after-install ../after-install.sh \
-    --before-remove ../before-remove.sh \
-    -s dir -t deb -v 2.1.2 -n urepo `find . -type f` && \
-rm -rf `ls|grep -v deb$`
-Created package {:path=>"urepo_2.1.2_amd64.deb"}
+chmod -R go-w build
+. <(grep -E "^(Package|Version|Architecture):" build/DEBIAN/control |sed -e 's/: \(.*\)/="\1"/') && \
+dpkg-deb --root-owner-group -b ./build ${Package}_${Version}_${Architecture}.deb
+dpkg-deb: building package 'urepo' in 'urepo_2.2.3_amd64.deb'.
 ```
 
 If you have the following error message:

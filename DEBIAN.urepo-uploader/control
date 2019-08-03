@@ -1,0 +1,7 @@
+Package: urepo-uploader
+Version: 2.0.0
+Architecture: amd64
+Section: default
+Priority: extra
+Maintainer: Hulu
+Description: Uploading tool for urepo (universal repository for linux binary packages)

@@ -1,7 +1,3 @@
-PKG_NAME=urepo
-PKG_VERSION=2.2.3
-PKG_DESCRIPTION="Universal repository for linux binary packages"
-
 .PHONY: all
 SHELL=/bin/bash
 
@@ -9,19 +5,23 @@ all: pkg
 bin:
 	gcc -Wall -O2 -o extract-post-file extract-post-file.c
 clean:
-	rm -rf extract-post-file build
+	rm -rf extract-post-file build *.deb
 test: bin
 	test/run-test.sh
 pkg: test
-	mkdir build
+	mkdir -p build
+	rm -rf build/*
 	cp -r {var,etc} build/
+	cp -r DEBIAN.urepo build/DEBIAN
 	cp extract-post-file build/var/urepo/cgi
-	cd build && \
-	fpm --deb-user root --deb-group root \
-	    -d nginx -d fcgiwrap -d createrepo \
-	    --deb-no-default-config-files \
-	    --description $(PKG_DESCRIPTION) \
-	    --after-install ../after-install.sh \
-	    --before-remove ../before-remove.sh \
-	    -s dir -t deb -v $(PKG_VERSION) -n $(PKG_NAME) `find . -type f` && \
-	find . ! -name '*.deb' -delete
+	chmod -R go-w build
+	. <(grep -E "^(Package|Version|Architecture):" build/DEBIAN/control |sed -e 's/: \(.*\)/="\1"/') && \
+	dpkg-deb --root-owner-group -b ./build $${Package}_$${Version}_$${Architecture}.deb
+uploader:
+	mkdir -p build
+	rm -rf build/*
+	cp -r usr build/
+	cp -r DEBIAN.urepo-uploader build/DEBIAN
+	chmod -R go-w build
+	. <(grep -E "^(Package|Version|Architecture):" build/DEBIAN/control |sed -e 's/: \(.*\)/="\1"/') && \
+	dpkg-deb --root-owner-group -b ./build $${Package}_$${Version}_$${Architecture}.deb
