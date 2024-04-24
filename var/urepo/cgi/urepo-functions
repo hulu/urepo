@@ -24,7 +24,7 @@ generate_pkg_control() {
             return 1
             ;;
     esac
-    pkg_data=$(ar p "$pkg_path" "$control_file"|tar $tar_options - ./control) || {
+    pkg_data=$(ar p "$pkg_path" "$control_file"|tar --no-anchored $tar_options - control) || {
         log "Error: failed to extract control data from \"$pkg_path\""
         rm -f "$pkg_path"
         return 1
