@@ -20,6 +20,14 @@ for release in $RPM_RELEASES; do
             mkdir -p "$dir"
             createrepo -s sha -q -c $dir/.cache $dir
         done
+        # let's handle non-default architectures
+        if [ -v RPM_CUSTOM_ARCHES[@] ] && [ -v RPM_CUSTOM_ARCHES[$release] ]; then
+            for arch in ${RPM_CUSTOM_ARCHES[$release]}; do
+                dir="$RPM_REPO_ROOT/$release/$component/$arch"
+                mkdir -p "$dir"
+                createrepo -s sha -q -c $dir/.cache $dir
+            done
+        fi
     done
     data+="${data:+, }$release: [$options]"
 done
@@ -34,6 +42,12 @@ for dist in $DEB_CODENAMES; do
         for arch in $DEB_ARCHITECTURES; do
             mkdir -p dists/$dist/$branch/binary-$arch
         done
+        # let's handle non-default architectures
+        if [ -v DEB_CUSTOM_ARCHES[@] ] && [ -v DEB_CUSTOM_ARCHES[$dist] ]; then
+            for arch in ${DEB_CUSTOM_ARCHES[$dist]}; do
+                mkdir -p dists/$dist/$branch/binary-$arch
+            done
+        fi
         ( generate_repo_data )
     done
     data+=", $dist: [$options]"
